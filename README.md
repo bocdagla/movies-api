@@ -50,7 +50,6 @@ docker-compose down
 ## Commands and queries
 
 - **Create showtime**
-    
     Should create showtime and should grab the movie data from the ProvidedApi.
     
 - **Reserve seats**
@@ -58,6 +57,7 @@ docker-compose down
     - It should not be possible to reserve the same seats two times in 10 minutes.
     - It shouldn't be possible to reserve an already sold seat.
     - All the seats, when doing a reservation, need to be contiguous.
+
 - **Buy seats**
     - We will need the GUID of the reservation, it is only possible to do it while the seats are reserved.
     - It is not possible to buy two times the same seat.

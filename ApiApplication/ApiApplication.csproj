@@ -15,11 +15,8 @@
 
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.40.0" />
-    <Protobuf Include="movies.proto" GrpcServices="Client" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Controllers\" />
+    <PackageReference Include="StackExchange.Redis" Version="2.6.111" />
+    <Protobuf Include="Protos\movies.proto" GrpcServices="Client" />
   </ItemGroup>
 
 </Project>
