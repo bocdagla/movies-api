@@ -1,2 +1,43 @@
 Please add the cURLs of your tests here:
 
+curl -X 'GET' \
+  'http://localhost:7172/v1/movies' \
+  -H 'accept: application/json' \
+  -H 'X-Apikey: 68e5fbda-9ec9-4858-97b2-4a8349764c63'
+
+curl -X 'GET' \
+  'https://localhost:32768/showtime' \
+  -H 'accept: text/plain'
+
+curl -X 'POST' \
+  'https://localhost:32768/showtime' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "auditoriumId": 1,
+  "movieId": "ID-test1",
+  "date": "2023-05-25T16:41:22.295Z"
+}'
+
+curl -X 'GET' \
+  'https://localhost:32768/showtime/1' \
+  -H 'accept: text/plain'
+
+curl -X 'PATCH' \
+  'https://localhost:32768/purchase' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "reservationId": "5080aff8-e67f-460c-987f-8f0910e1e92e"
+}'
+
+curl -X 'PATCH' \
+  'https://localhost:32768/showtime/1/reserve' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "seatIds": [
+    1
+  ],
+  "row": 1
+}'

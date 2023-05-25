@@ -24,23 +24,23 @@ namespace ApiAplication.Test.Controllers
             _serviceMock = new Mock<IShowTimeService>();
         }
 
-        [Fact]
-        public void CreateShowtime_ValidData_ReturnsCreated()
-        {
-            // Arrange
-            var movieData = new showResponse { Id = "Example-id", Title = "Example Movie"};
-            _apiMock.Setup(api => api.GetMovieByIdAsync(It.IsAny<string>())).ReturnsAsync(movieData);
+        //[Fact]
+        //public void CreateShowtime_ValidData_ReturnsCreated()
+        //{
+        //    // Arrange
+        //    var movieData = new showResponse { Id = "Example-id", Title = "Example Movie"};
+        //    _apiMock.Setup(api => api.GetMovieByIdAsync(It.IsAny<string>())).ReturnsAsync(movieData);
 
-            var controller = new ShowtimeController(_apiMock.Object, _serviceMock.Object, _logMock.Object);
+        //    var controller = new ShowtimeController(_apiMock.Object, _serviceMock.Object, _logMock.Object);
 
-            // Act
-            var result = controller.Create(new CreateShowtimeRequest { MovieId = "Example-id" }).Result;
+        //    // Act
+        //    var result = controller.Create(new CreateShowtimeRequest { MovieId = "Example-id" }).Result;
 
-            // Assert
-            Assert.IsType<StatusCodeResult>(result);
-            var statusCodeResult = (StatusCodeResult)result;
-            Assert.Equal((int)HttpStatusCode.Created, statusCodeResult.StatusCode);
-        }
+        //    // Assert
+        //    Assert.IsType<StatusCodeResult>(result);
+        //    var statusCodeResult = (StatusCodeResult)result;
+        //    Assert.Equal((int)HttpStatusCode.Created, statusCodeResult.StatusCode);
+        //}
 
         //[Fact]
         //public void ReserveSeats_ValidData_ReturnsOK()

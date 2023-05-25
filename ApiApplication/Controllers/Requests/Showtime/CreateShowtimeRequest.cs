@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace ApiApplication.Controllers.Requests
+namespace ApiApplication.Controllers.Requests.Showtime
 {
     public class CreateShowtimeRequest
     {
@@ -13,10 +13,5 @@ namespace ApiApplication.Controllers.Requests
 
         [Required]
         public DateTime Date { get; set; }
-
-        public override string ToString()
-        {
-            return $"AuditoriumId: {AuditoriumId}, MovieId: {MovieId}, Date: {Date}";
-        }
     }
 }
