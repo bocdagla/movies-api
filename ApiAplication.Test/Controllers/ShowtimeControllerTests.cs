@@ -1,97 +1,232 @@
 ﻿using ApiApplication.ApiClients.Abstractions;
 using ApiApplication.Controllers;
 using ApiApplication.Controllers.Requests;
+using ApiApplication.Controllers.Requests.Showtime;
+using ApiApplication.Controllers.Responses;
+using ApiApplication.Database.Entities;
 using ApiApplication.Services.Abstractions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ProtoDefinitions;
+using System.Collections.Generic;
+using System;
 using System.Net;
+using System.Threading.Tasks;
+using System.Threading;
 using Xunit;
+using System.Linq;
+using ApiApplication.ApiClients.Response;
 
 namespace ApiAplication.Test.Controllers
 {
     public class ShowtimeControllerTests
     {
-        Mock<ILogger> _logMock;
-        Mock<IMovieApiClient> _apiMock;
-        Mock<IShowTimeService> _serviceMock;
+        private readonly Mock<ILogger<CreateShowtimeRequest>> _loggerMock;
+        private readonly Mock<IMovieApiClient> _movieApiClientMock;
+        private readonly Mock<IShowTimeService> _showTimeServiceMock;
+        private readonly ShowtimeController _showtimeController;
 
         public ShowtimeControllerTests()
         {
-            _logMock = new Mock<ILogger>();
-            _apiMock = new Mock<IMovieApiClient>();
-            _serviceMock = new Mock<IShowTimeService>();
+            _loggerMock = new Mock<ILogger<CreateShowtimeRequest>>();
+            _movieApiClientMock = new Mock<IMovieApiClient>();
+            _showTimeServiceMock = new Mock<IShowTimeService>();
+            _showtimeController = new ShowtimeController(_movieApiClientMock.Object, _showTimeServiceMock.Object, _loggerMock.Object);
         }
 
-        //[Fact]
-        //public void CreateShowtime_ValidData_ReturnsCreated()
-        //{
-        //    // Arrange
-        //    var movieData = new showResponse { Id = "Example-id", Title = "Example Movie"};
-        //    _apiMock.Setup(api => api.GetMovieByIdAsync(It.IsAny<string>())).ReturnsAsync(movieData);
+        [Fact]
+        public async Task Get_WithValidData_ReturnsOkResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var showtimeEntities = new List<ShowtimeEntity>
+            {
+                new ShowtimeEntity { Id = 1, AuditoriumId = 1, Movie = new MovieEntity { Title = "Movie 1" }, SessionDate = DateTime.Now }
+            };
+            _showTimeServiceMock.Setup(mock => mock.GetAsync(cancellationToken)).ReturnsAsync(showtimeEntities);
 
-        //    var controller = new ShowtimeController(_apiMock.Object, _serviceMock.Object, _logMock.Object);
+            // Act
+            var result = await _showtimeController.Get(cancellationToken);
 
-        //    // Act
-        //    var result = controller.Create(new CreateShowtimeRequest { MovieId = "Example-id" }).Result;
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var showtimeResponses = Assert.IsAssignableFrom<IEnumerable<GetShowtimeResponse>>(okResult.Value);
+            Assert.Equal(showtimeEntities.Count, showtimeResponses.Count());
+        }
 
-        //    // Assert
-        //    Assert.IsType<StatusCodeResult>(result);
-        //    var statusCodeResult = (StatusCodeResult)result;
-        //    Assert.Equal((int)HttpStatusCode.Created, statusCodeResult.StatusCode);
-        //}
+        [Fact]
+        public async Task Get_WithInvalidData_ReturnsNotFoundResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            _showTimeServiceMock.Setup(mock => mock.GetAsync(cancellationToken)).ReturnsAsync((List<ShowtimeEntity>)null);
 
-        //[Fact]
-        //public void ReserveSeats_ValidData_ReturnsOK()
-        //{
-        //    // Arrange
-        //    var seats = new List<SeatEntity>
-        //    {
-        //        new SeatEntity { Row = 1, SeatNumber = 1 },
-        //        new SeatEntity { Row = 1, SeatNumber = 2 }
-        //    };
+            // Act
+            var result = await _showtimeController.Get(cancellationToken);
 
-        //    var showtime = new ShowtimeEntity { Id = 1, Movie = new MovieEntity(), SessionDate = DateTime.Now };
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
 
-        //    var seatServiceMock = new Mock<ISeatService>();
-        //    seatServiceMock.Setup(service => service.ReserveSeats(seats, showtime)).Returns(true);
+        [Fact]
+        public async Task Get_WithValidId_ReturnsOkResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var showtimeEntity = new ShowtimeEntity { Id = 1, AuditoriumId = 1, Movie = new MovieEntity { Title = "Movie 1" }, SessionDate = DateTime.Now };
+            _showTimeServiceMock.Setup(mock => mock.GetAsync(showtimeEntity.Id, cancellationToken)).ReturnsAsync(showtimeEntity);
 
-        //    var controller = new ReservationController(null, null, seatServiceMock.Object);
+            // Act
+            var result = await _showtimeController.Get(showtimeEntity.Id, cancellationToken);
 
-        //    // Act
-        //    var result = controller.ReserveSeats(seats, showtime.Id);
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var showtimeResponse = Assert.IsType<GetShowtimeResponse>(okResult.Value);
+            Assert.Equal(showtimeEntity.Id, showtimeResponse.Id);
+        }
 
-        //    // Assert
-        //    Assert.IsType<OkObjectResult>(result);
-        //    var okResult = (OkObjectResult)result;
-        //    Assert.Equal((int)HttpStatusCode.OK, okResult.StatusCode);
-        //}
+        [Fact]
+        public async Task Get_WithInvalidId_ReturnsNotFoundResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            _showTimeServiceMock.Setup(mock => mock.GetAsync(It.IsAny<int>(), cancellationToken)).ReturnsAsync((ShowtimeEntity)null);
 
-        //[Fact]
-        //public void BuySeats_ValidData_ReturnsOK()
-        //{
-        //    // Arrange
-        //    var reservationId = Guid.NewGuid();
-        //    var seats = new List<SeatEntity>
-        //    {
-        //        new SeatEntity { Row = 1, SeatNumber = 1 },
-        //        new SeatEntity { Row = 1, SeatNumber = 2 }
-        //    };
+            // Act
+            var result = await _showtimeController.Get(1, cancellationToken);
 
-        //    var reservationServiceMock = new Mock<IReservationService>();
-        //    reservationServiceMock.Setup(service => service.IsReservationValid(reservationId)).Returns(true);
-        //    reservationServiceMock.Setup(service => service.BuySeats(reservationId, seats)).Returns(true);
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
 
-        //    var controller = new ReservationController(null, reservationServiceMock.Object);
+        [Fact]
+        public async Task Create_WithValidData_ReturnsCreatedAtActionResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new CreateShowtimeRequest { AuditoriumId = 1, MovieId = "movie1", Date = DateTime.Now };
+            var movieData = new MovieData { Title = "Movie 1" };
+            var createdShowtime = new ShowtimeEntity { Id = 1 };
+            _movieApiClientMock.Setup(mock => mock.GetAsync(request.MovieId, cancellationToken)).ReturnsAsync(new GetMovieResponse { Success = true, Movies = new MovieData[] { movieData } });
+            _showTimeServiceMock.Setup(mock => mock.CreateAsync(request.AuditoriumId, request.Date, movieData, cancellationToken)).ReturnsAsync(createdShowtime);
 
-        //    // Act
-        //    var result = controller.BuySeats(reservationId, seats);
+            // Act
+            var result = await _showtimeController.Create(request, cancellationToken);
 
-        //    // Assert
-        //    Assert.IsType<OkResult>(result);
-        //    var okResult = (OkResult)result;
-        //    Assert.Equal((int)HttpStatusCode.OK, okResult.StatusCode);
-        //}
+            // Assert
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+            Assert.Equal(nameof(ShowtimeController.Create), createdAtActionResult.ActionName);
+        }
+
+        [Fact]
+        public async Task Create_WithInvalidMovieId_ReturnsNotFoundResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new CreateShowtimeRequest { AuditoriumId = 1, MovieId = "movie1", Date = DateTime.Now };
+            _movieApiClientMock.Setup(mock => mock.GetAsync(request.MovieId, cancellationToken)).ReturnsAsync(new GetMovieResponse { Success = false });
+
+            // Act
+            var result = await _showtimeController.Create(request, cancellationToken);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Create_WithInvalidData_ReturnsBadRequestResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new CreateShowtimeRequest { AuditoriumId = 1, MovieId = null, Date = DateTime.Now };
+            _showtimeController.ModelState.AddModelError("MovieId", "The MovieId field is required");
+
+            // Act
+            var result = await _showtimeController.Create(request, cancellationToken);
+
+            // Assert
+            Assert.IsType<BadRequestResult>(result);
+        }
+
+        [Fact]
+        public async Task Reserve_WithValidData_ReturnsOkResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var showtimeId = 1;
+            var request = new ReserveSeatsRequest { Row = 1, SeatIds = new short[] { 1, 2, 3 } };
+            _showTimeServiceMock.Setup(mock => mock.ValidateSeatsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(true);
+            _showTimeServiceMock.Setup(mock => mock.AddReservationsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(Guid.NewGuid());
+
+            // Act
+            var result = await _showtimeController.Reserve(showtimeId, request, cancellationToken);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.IsType<Guid>(okResult.Value);
+        }
+
+        [Fact]
+        public async Task Reserve_WithInvalidSeats_ReturnsConflictResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var showtimeId = 1;
+            var request = new ReserveSeatsRequest { Row = 1, SeatIds = new short[] { 1, 3 } };
+            _showTimeServiceMock.Setup(mock => mock.ValidateSeatsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(false);
+
+            // Act
+            var result = await _showtimeController.Reserve(showtimeId, request, cancellationToken);
+
+            // Assert
+            Assert.IsType<ConflictResult>(result);
+        }
+
+        [Fact]
+        public async Task Purchase_WithValidReservationId_ReturnsOkResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new PurchaseSeatsRequest { ReservationId = Guid.NewGuid() };
+            _showTimeServiceMock.Setup(mock => mock.PurchaseReservation(request.ReservationId, cancellationToken)).ReturnsAsync(true);
+
+            // Act
+            var result = await _showtimeController.Purchase(request, cancellationToken);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            Assert.Equal(request.ReservationId, okResult.Value);
+        }
+
+        [Fact]
+        public async Task Purchase_WithInvalidReservationId_ReturnsNotFoundResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new PurchaseSeatsRequest { ReservationId = Guid.NewGuid() };
+            _showTimeServiceMock.Setup(mock => mock.PurchaseReservation(request.ReservationId, cancellationToken)).ReturnsAsync(false);
+
+            // Act
+            var result = await _showtimeController.Purchase(request, cancellationToken);
+
+            // Assert
+            Assert.IsType<NotFoundResult>(result);
+        }
+
+        [Fact]
+        public async Task Purchase_WithInvalidData_ReturnsBadRequestResult()
+        {
+            // Arrange
+            var cancellationToken = CancellationToken.None;
+            var request = new PurchaseSeatsRequest();
+            _showtimeController.ModelState.AddModelError("ReservationId", "The ReservationId field is required");
+
+            // Act
+            var result = await _showtimeController.Purchase(request, cancellationToken);
+
+            // Assert
+            Assert.IsType<BadRequestResult>(result);
+        }
     }
 }

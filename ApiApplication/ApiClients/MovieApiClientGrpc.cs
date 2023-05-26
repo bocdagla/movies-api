@@ -26,16 +26,6 @@ namespace ApiApplication.ApiClients
             _cache = cache;
         }
 
-        public async Task<GetMovieResponse> GetAsync()
-        {
-            var all = await _apiClient.GetAllAsync(new Empty(), GetDefaultHeaders());
-            if (!all.Data.TryUnpack<showListResponse>(out var data))
-            {
-                return MapError(all);
-            }
-            return MapSuccess(data);
-        }
-
         public async Task<GetMovieResponse> GetAsync(string movieId, CancellationToken cancellationToken = default)
         {
             var existsInCache= _cache.ExistsAsync(movieId);
@@ -54,15 +44,6 @@ namespace ApiApplication.ApiClients
             }
 
             return MapSuccess(show);
-        }
-
-        private GetMovieResponse MapSuccess(showListResponse shows)
-        {
-            return new GetMovieResponse
-            {
-                Success = true,
-                Movies = shows.Shows.Select(Map).ToArray()
-            };
         }
 
         private GetMovieResponse MapSuccess(showResponse show)

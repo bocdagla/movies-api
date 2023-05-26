@@ -9,6 +9,8 @@ services:
       - ASPNETCORE_URLS=https://+:443;http://+:80
       - ASPNETCORE_Kestrel__Certificates__Default__Password=password
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/app/aspnetapp.pfx
+      - FailurePercentage=40
+    entrypoint: sh -c "mv /app/amovies-db.json /app/movies-db.json && exec dotnet Lodgify.Api.Challenge.dll"        
   cache:
     image: "redis"
     restart: unless-stopped

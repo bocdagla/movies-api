@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,8 @@ namespace ApiApplication.Controllers
         [Route("")]
         public async Task<IActionResult> Get(CancellationToken cancellationToken)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
+
             var result = await _showTimeService.GetAsync(cancellationToken);
             if(result == null)
             {
@@ -43,11 +46,16 @@ namespace ApiApplication.Controllers
 
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(GetShowtimeResponse))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [Route("{id}")]
         public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             var result = await _showTimeService.GetAsync(id, cancellationToken);
+            if (result == null)   {
+                return NotFound();
+            }
             return Ok(Map(result));
         }
 
@@ -58,14 +66,17 @@ namespace ApiApplication.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateShowtimeRequest request, CancellationToken cancellationToken)
         {
-            if (!ModelState.IsValid) return BadRequest();
+            Stopwatch stopwatch = Stopwatch.StartNew();
+            if (!ModelState.IsValid)   {
+                return BadRequest();
+            }
             var movie = await _movieApiClient.GetAsync(request.MovieId, cancellationToken);
             if(!movie.Success)
             {
                 return NotFound();
             }
             var result = await _showTimeService.CreateAsync(request.AuditoriumId, request.Date, movie.Movies[0], cancellationToken);
-            return CreatedAtAction(nameof(Get), new { id = result.Id });
+            return CreatedAtAction(nameof(Create), request);
         }
 
         [HttpPatch]
@@ -75,6 +86,7 @@ namespace ApiApplication.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Reserve(int id, [FromBody] ReserveSeatsRequest request, CancellationToken cancellationToken)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             if (!ModelState.IsValid) return BadRequest();
             if(!await _showTimeService.ValidateSeatsAsync(id, request.Row, request.SeatIds, cancellationToken))
             {
@@ -92,6 +104,7 @@ namespace ApiApplication.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Purchase([FromBody] PurchaseSeatsRequest request, CancellationToken cancellationToken)
         {
+            Stopwatch stopwatch = Stopwatch.StartNew();
             if (!ModelState.IsValid) return BadRequest();
             if (!await _showTimeService.PurchaseReservation(request.ReservationId, cancellationToken))
             {

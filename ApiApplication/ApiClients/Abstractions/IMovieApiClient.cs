@@ -7,7 +7,6 @@ namespace ApiApplication.ApiClients.Abstractions
 {
     public interface IMovieApiClient
     {
-        Task<GetMovieResponse> GetAsync();
         
         Task<GetMovieResponse> GetAsync(string movieId, CancellationToken cancellationToken = default);
     }

@@ -3,6 +3,7 @@ using ApiApplication.ApiClients.Abstractions;
 using ApiApplication.Database;
 using ApiApplication.Database.Repositories;
 using ApiApplication.Database.Repositories.Abstractions;
+using ApiApplication.Middleware;
 using ApiApplication.Services;
 using ApiApplication.Services.Abstractions;
 using Microsoft.AspNetCore.Builder;
@@ -96,7 +97,7 @@ namespace ApiApplication
             app.UseRouting();
             app.UseAuthentication();
             app.UseAuthorization();
-
+            app.UseMiddleware<TimingMiddleware>();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

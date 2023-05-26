@@ -62,19 +62,18 @@ namespace ApiApplication.Services
         {
             // Checking if the seats requested are overlapping any ticket
             var tickets = await _tickets.GetEnrichedAsync(showtimeId, cancellationToken);
-            var ticketValidationTask = Task.Run(async () => {
+            var ticketValidationTask = Task.Run(() => {
                 var ticketsWithRequestedSeats = tickets.Where(t => t.Seats.Any(s => s.Row == row && seatNumbers.Contains(s.SeatNumber)));
                 return !ticketsWithRequestedSeats.Any(t => t.Paid || DateTime.Now <= t.CreatedTime.AddMinutes(10));
             });
 
             // Checking if the seats requested exist in the auditorium
             var auditorium = await _auditoriums.GetAsync(showtimeId, cancellationToken);
-            var seatValidationTask = Task.Run(async () => {
+            var seatValidationTask = Task.Run(() => {
                 return seatNumbers.All(sn => auditorium.Seats.Any(s => s.Row == row && s.SeatNumber == sn)); 
             });
 
-            await Task.WhenAll(ticketValidationTask, seatValidationTask);
-            return ticketValidationTask.Result && seatValidationTask.Result;
+            return await ticketValidationTask && await seatValidationTask;
         }
 
         public async Task<bool> PurchaseReservation(Guid reservationId, CancellationToken cancellationToken = default)
