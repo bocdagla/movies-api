@@ -116,7 +116,9 @@ namespace ApiAplication.Test.Controllers
 
             // Assert
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-            Assert.Equal(nameof(ShowtimeController.Create), createdAtActionResult.ActionName);
+            Assert.Equal(nameof(ShowtimeController.Get), createdAtActionResult.ActionName);
+            var typedValue = Assert.IsType<CreatedShowtimeResponse>(createdAtActionResult.Value);
+            Assert.Equal(createdShowtime.Id, typedValue.Id);
         }
 
         [Fact]
@@ -155,16 +157,18 @@ namespace ApiAplication.Test.Controllers
             // Arrange
             var cancellationToken = CancellationToken.None;
             var showtimeId = 1;
+            var resultGuid = Guid.NewGuid();
             var request = new ReserveSeatsRequest { Row = 1, SeatIds = new short[] { 1, 2, 3 } };
             _showTimeServiceMock.Setup(mock => mock.ValidateSeatsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(true);
-            _showTimeServiceMock.Setup(mock => mock.AddReservationsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(Guid.NewGuid());
+            _showTimeServiceMock.Setup(mock => mock.AddReservationsAsync(showtimeId, request.Row, request.SeatIds, cancellationToken)).ReturnsAsync(resultGuid);
 
             // Act
             var result = await _showtimeController.Reserve(showtimeId, request, cancellationToken);
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.IsType<Guid>(okResult.Value);
+            var typedValue = Assert.IsType<AddedReservationResponse>(okResult.Value);
+            Assert.Equal(resultGuid, typedValue.ReservationId);
         }
 
         [Fact]
@@ -189,6 +193,7 @@ namespace ApiAplication.Test.Controllers
             // Arrange
             var cancellationToken = CancellationToken.None;
             var request = new PurchaseSeatsRequest { ReservationId = Guid.NewGuid() };
+            var expectedResult = new PurchasedReservationResponse { ReservationId = request.ReservationId };
             _showTimeServiceMock.Setup(mock => mock.PurchaseReservation(request.ReservationId, cancellationToken)).ReturnsAsync(true);
 
             // Act
@@ -196,7 +201,8 @@ namespace ApiAplication.Test.Controllers
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            Assert.Equal(request.ReservationId, okResult.Value);
+            var typedResult = Assert.IsType<PurchasedReservationResponse>(okResult.Value);
+            Assert.Equal(expectedResult.ReservationId, typedResult.ReservationId);
         }
 
         [Fact]

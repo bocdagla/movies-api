@@ -61,7 +61,7 @@ namespace ApiApplication.Controllers
 
         [HttpPost]
         [Route("")]
-        [ProducesResponseType(StatusCodes.Status200OK,Type=typeof(int))]
+        [ProducesResponseType(StatusCodes.Status201Created,Type=typeof(CreatedShowtimeResponse))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Create([FromBody] CreateShowtimeRequest request, CancellationToken cancellationToken)
@@ -76,12 +76,12 @@ namespace ApiApplication.Controllers
                 return NotFound();
             }
             var result = await _showTimeService.CreateAsync(request.AuditoriumId, request.Date, movie.Movies[0], cancellationToken);
-            return CreatedAtAction(nameof(Create), request);
+            return CreatedAtAction(nameof(Get), new CreatedShowtimeResponse{ Id = result.Id });
         }
 
         [HttpPatch]
         [Route("{id}/reserve")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Guid))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(AddedReservationResponse))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Reserve(int id, [FromBody] ReserveSeatsRequest request, CancellationToken cancellationToken)
@@ -94,12 +94,12 @@ namespace ApiApplication.Controllers
             }
             
             var reservationId = await _showTimeService.AddReservationsAsync(id, request.Row, request.SeatIds, cancellationToken);
-            return Ok(reservationId);
+            return Ok(new AddedReservationResponse() { ReservationId = reservationId });
         }
 
         [HttpPatch]
         [Route("/purchase")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(Guid))]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(PurchasedReservationResponse))]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> Purchase([FromBody] PurchaseSeatsRequest request, CancellationToken cancellationToken)
@@ -110,7 +110,7 @@ namespace ApiApplication.Controllers
             {
                 return NotFound();
             }
-            return Ok(request.ReservationId);
+            return Ok(new PurchasedReservationResponse() { ReservationId = request.ReservationId });
         }
 
         //Todo: Move this to a mapper

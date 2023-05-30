@@ -5,7 +5,6 @@ using ApiApplication.Services.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,6 +12,8 @@ namespace ApiApplication.Services
 {
     public class ShowTimeService : IShowTimeService
     {
+        //Todo: Move to Conf like api url
+        private const int RESERVATION_MAX_MINUTES = 10;
         IAuditoriumsRepository _auditoriums;
         IShowtimesRepository _showtimes;
         ITicketsRepository _tickets;
@@ -64,7 +65,7 @@ namespace ApiApplication.Services
             var tickets = await _tickets.GetEnrichedAsync(showtimeId, cancellationToken);
             var ticketValidationTask = Task.Run(() => {
                 var ticketsWithRequestedSeats = tickets.Where(t => t.Seats.Any(s => s.Row == row && seatNumbers.Contains(s.SeatNumber)));
-                return !ticketsWithRequestedSeats.Any(t => t.Paid || DateTime.Now <= t.CreatedTime.AddMinutes(10));
+                return !ticketsWithRequestedSeats.Any(t => t.Paid || DateTime.Now <= t.CreatedTime.AddMinutes(RESERVATION_MAX_MINUTES));
             });
 
             // Checking if the seats requested exist in the auditorium
@@ -87,7 +88,7 @@ namespace ApiApplication.Services
 
         private bool IsTicketReserved(TicketEntity ticket)
         {
-            return !ticket.Paid && DateTime.Now <= ticket.CreatedTime.AddMinutes(10);
+            return !ticket.Paid && DateTime.Now <= ticket.CreatedTime.AddMinutes(RESERVATION_MAX_MINUTES);
         }
 
         //TODO Move this to a mapper
